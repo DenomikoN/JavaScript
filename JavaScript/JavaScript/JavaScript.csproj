@@ -67,6 +67,7 @@
   <ItemGroup>
     <Content Include="index.html" />
     <Content Include="Scripts\part1.js" />
+    <Content Include="Styles\reset.css" />
     <Content Include="Styles\style.css" />
     <Content Include="Web.config" />
   </ItemGroup>

@@ -1,1 +1,61 @@
-﻿
+﻿.head-container {
+	display: block;
+	text-align: center;
+
+	margin: 10px;
+	padding: 20px;
+
+	background-color: #b6b0b0;
+}
+
+.head-font {
+	font: bold 32px black;
+}
+
+.content {
+	width: 800px;
+	margin: 20px auto;
+}
+
+.task-container {
+	margin-top: 20px; 
+	background-color: #e6e0e0;
+}
+
+.task-head-container {
+	margin: 0;
+	background-color: #b6b0b0;
+}
+
+.task-head-font {
+	font: bold 24px black;
+	text-align: center;
+}
+
+.form {
+	margin: 20px;
+}
+
+.result-container {
+	padding: 0 20px 15px;
+}
+
+.viewer {
+	visibility: hidden;
+	padding: 7px;
+	font-weight: bold;
+	border: 1px #b6b0b0 solid;
+}
+
+.error {
+	color: red;
+}
+
+.text-box {
+	width: 78%;
+}
+
+.button {
+	width: 70px;
+}
+
