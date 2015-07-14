@@ -52,10 +52,14 @@
 }
 
 .text-box {
-	width: 78%;
+	width: 550px;
 }
 
 .button {
 	width: 70px;
 }
 
+.radio-container {
+	padding-top: 20px;
+	padding-left: 20px;
+}
