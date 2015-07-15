@@ -222,6 +222,86 @@
 
 
 
+
+	/* #region String calculator (4) */
+
+	var stringCalculator = {
+		parse: function (strNumber) {
+			if (!strNumber) {
+				return undefined;
+			}
+			if ((typeof strNumber) == "number") {
+				return strNumber;
+			}
+
+			var number = strNumber.trim();
+			var regExInt = /^(-)?[0-9]+$/g;
+			var regExFloat = /^(-)?[0-9]+\.[0-9]+$/g;
+
+			if (regExInt.test(number)) {
+				return parseInt(number);
+			} else if (regExFloat.test(number)) {
+				return parseFloat(number);
+			} else {
+				return undefined;
+			}
+		},
+		isValid: function (args) {
+			if (!args) {
+				return false;
+			}
+			args.forEach(function (item) {
+				if (!stringCalculator.parse(item)) {
+					return false;
+				}
+			});
+			return true;
+		},
+		add: function (num1, num2) {
+			if (!this.isValid([num1, num2])) {
+				return undefined;
+			}
+
+			var a = this.parse(num1);
+			var b = this.parse(num2);
+
+			return a + b;
+		},
+		sub: function (num1, num2) {
+			if (!this.isValid([num1, num2])) {
+				return undefined;
+			}
+
+			var a = this.parse(num1);
+			var b = this.parse(num2);
+
+			return a - b;
+		},
+		mul: function (num1, num2) {
+			if (!this.isValid([num1, num2])) {
+				return undefined;
+			}
+
+			var a = this.parse(num1);
+			var b = this.parse(num2);
+
+			return a * b;
+		},
+		div: function (num1, num2) {
+			if (!this.isValid([num1, num2])) {
+				return undefined;
+			}
+
+			var a = this.parse(num1);
+			var b = this.parse(num2);
+
+			return b ? a / b : Infinity;
+		}
+	};
+
+	/* #endregion String calculator (4) */
+
+
 	/* #region Array Sorter (5) */
 
 	function shellSort(arr) {
@@ -376,7 +456,7 @@
 		var dec = 0;
 		var pow = bin.length - 1;
 
-		bin.forEach(function(item) {
+		bin.forEach(function (item) {
 			dec += item * Math.pow(2, pow);
 			pow--;
 		});
@@ -384,7 +464,7 @@
 		return dec;
 	}
 
-	function Converter(parameters) {
+	function Converter() {
 		this.decToBin = decToBin;
 		this.binToDec = binToDec;
 	}
@@ -393,6 +473,118 @@
 
 
 
+	/* #region Caching calculator (9) */
+
+	function CacheCalculator() {
+		this.CACHE = new Object();
+		this.clear = function () {
+			this.CACHE = new Object();
+		}
+		this.add = function (a, b) {
+			var key = a + "+" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key] + " (cache)";
+			} else {
+				var result = a + b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.sub = function (a, b) {
+			var key = a + "-" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a - b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.mul = function (a, b) {
+			var key = a + "*" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a * b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.div = function (a, b) {
+			var key = a + "/" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = b == 0 ? Infinity : a / b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.mod = function (a, b) {
+			var key = a + "%" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a % b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.pow = function (a, b) {
+			var key = a + "pow" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = Math.pow(a, b);
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.and = function (a, b) {
+			var key = a + "&" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a & b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.or = function (a, b) {
+			var key = a + "|" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a | b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.shr = function (a, b) {
+			var key = a + ">>" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a >> b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+		this.shl = function (a, b) {
+			var key = a + "<<" + b;
+			if (this.CACHE[key]) {
+				return this.CACHE[key];
+			} else {
+				var result = a << b;
+				this.CACHE[key] = result;
+				return result;
+			}
+		}
+	}
+
+	var calculator = new CacheCalculator();
+
+	/* #endregion Caching calculator (9) */
 
 
 
@@ -427,6 +619,37 @@
 		setResult("vArraySelection", "Result: [" + result + "]");
 	}
 
+	document.getElementById("bStringCalc").onclick = function () {
+		var num1 = getValue("tbStringCalc1");
+		var num2 = getValue("tbStringCalc2");
+		var operator = getValue("cbStringCalcOperators");
+		var result;
+
+		switch (operator) {
+			case "+": {
+				result = stringCalculator.add(num1, num2);
+				break;
+			}
+			case "-": {
+				result = stringCalculator.sub(num1, num2);
+				break;
+			}
+			case "*": {
+				result = stringCalculator.mul(num1, num2);
+				break;
+			}
+			case "/": {
+				result = stringCalculator.div(num1, num2);
+				break;
+			}
+			default: {
+				setError("vStringCalc", "Unknow operator \"" + operator + "\"!");
+				return;
+			}
+		}
+
+		setResult("vStringCalc", num1 + " " + operator + " " + num2 + " = " + result);
+	}
 	document.getElementById("bArraySort").onclick = function () {
 		var value = getValue("tbArraySort");
 		var arr = parseArray(value);
@@ -447,7 +670,6 @@
 
 		setResult("vArraySort", result);
 	}
-
 	document.getElementById("bBinaryConverter").onclick = function () {
 		var value = getValue("tbBinaryConverter");
 		var converter = new Converter();
@@ -469,6 +691,70 @@
 			var bin = value.split("");
 			setResult("vBinaryConverter", "Result: " + converter.binToDec(bin));
 		}
+	}
+
+	document.getElementById("bCache").onclick = function () {
+		var left = getValue("tbCacheLeft");
+		var right = getValue("tbCacheRight");
+
+		if (isNaN(left) || isNaN(right)) {
+			setError("vCache", "Data entry errors!");
+			return;
+		}
+
+		var a = parseFloat(left);
+		var b = parseFloat(right);
+		var operator = getValue("cbCacheOperators");
+		var result;
+
+		switch (operator) {
+			case "+": {
+				result = calculator.add(a, b);
+				break;
+			}
+			case "-": {
+				result = calculator.sub(a, b);
+				break;
+			}
+			case "*": {
+				result = calculator.mul(a, b);
+				break;
+			}
+			case "/": {
+				result = calculator.div(a, b);
+				break;
+			}
+			case "%": {
+				result = calculator.mod(a, b);
+				break;
+			}
+			case "pow": {
+				result = calculator.pow(a, b);
+				break;
+			}
+			case "and": {
+				result = calculator.and(a, b);
+				break;
+			}
+			case "or": {
+				result = calculator.or(a, b);
+				break;
+			}
+			case "shr": {
+				result = calculator.shr(a, b);
+				break;
+			}
+			case "shl": {
+				result = calculator.shl(a, b);
+				break;
+			}
+			default: {
+				setError("vCache", "Unknow operator \"" + operator + "\"!");
+				return;
+			}
+		}
+
+		setResult("vCache", left + " " + operator + " " + right + " = " + result);
 	}
 }
 

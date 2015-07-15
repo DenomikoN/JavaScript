@@ -53,6 +53,25 @@
 
 
 
+		<div class="task-container">
+			<div class="task-head-container">
+				<p class="task-head-font">String calculator</p>
+			</div>
+			<div class="form">
+				<label class="label">Enter numbers: <input type="text" id="tbStringCalc1" value="5" /></label>
+				<select id="cbStringCalcOperators">
+					<option value="+">+</option>
+					<option value="-">-</option>
+					<option value="*">*</option>
+					<option value="/">/</option>
+				</select>
+				<input type="text" id="tbStringCalc2" value="8.5" />
+				<input type="button" id="bStringCalc" class="button" value="OK" />
+			</div>
+			<div class="result-container">
+				<p id="vStringCalc" class="viewer"></p>
+			</div>
+		</div>
 
 		<div class="task-container">
 			<div class="task-head-container">
@@ -72,15 +91,43 @@
 				<p class="task-head-font">Binary Converter</p>
 			</div>
 			<div class="form">
-				<label class="label">Enter number: <input type="text" id="tbBinaryConverter" class="text-box" value="23" /></label>
+				<label class="label">Enter number: <input type="text" id="tbBinaryConverter" class="text-box" value="23"/></label>
 				<input type="button" id="bBinaryConverter" class="button" value="OK"/>
 				<div class="radio-container">
-					<label><input type="radio" id="isToDec" name="rbBinaryConverter" checked="checked" />Dec to bin</label>
-					<label><input type="radio" name="rbBinaryConverter" />Bin to dec</label>
+					<label><input type="radio" id="isToDec" name="rbBinaryConverter" checked="checked"/>Dec to bin</label>
+					<label><input type="radio" name="rbBinaryConverter"/>Bin to dec</label>
 				</div>
 			</div>
 			<div class="result-container">
 				<p id="vBinaryConverter" class="viewer"></p>
+			</div>
+		</div>
+
+
+
+		<div class="task-container">
+			<div class="task-head-container">
+				<p class="task-head-font">Caching calculator</p>
+			</div>
+			<div class="form">
+				<label class="label">Enter numbers: <input type="text" id="tbCacheLeft" value="20"/></label>
+				<select id="cbCacheOperators">
+					<option value="+">+</option>
+					<option value="-">-</option>
+					<option value="*">*</option>
+					<option value="/">/</option>
+					<option value="%">%</option>
+					<option value="pow">pow</option>
+					<option value="and">and</option>
+					<option value="or">or</option>
+					<option value="shr">shr</option>
+					<option value="shl">shl</option>
+				</select>
+				<input type="text" id="tbCacheRight" value="4" />
+				<input type="button" id="bCache" class="button" value="OK" />
+			</div>
+			<div class="result-container">
+				<p id="vCache" class="viewer"></p>
 			</div>
 		</div>
 
