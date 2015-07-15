@@ -61,6 +61,7 @@
 
 
 
+
 	/* #region Array Processing Tool (1) */
 
 	function subSum(arr) {
@@ -221,6 +222,148 @@
 	/* #endregion Array Processing Tool (1) */
 
 
+	/* #region Date Display Formatter (2) */
+
+	var DateFormatter = {
+		days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+		shortDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+		months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+		shortMonths: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+		masks: {
+			"default": "dd mmm yyyy",
+			shortDate: "m/d/yy",
+			mediumDate: "mmm d, yyyy",
+			longDate: "mmmm d, yyyy",
+			fullDate: "dddd, mmmm d, yyyy",
+			isoDate: "yyyy-mm-dd"
+		},
+
+		parse: function (date, mask) {
+			/* if empty parameters, then now */
+			if (!date && !mask) {
+				return new Date();
+			}
+
+			/* if 'date' of Date or milliseconds */
+			if (Date.parse(date)) {
+				return new Date(Date.parse(date));
+			}
+
+			if (!date && Date.parse(mask)) {
+				return Date.parse(mask);
+			}
+
+			/* if 'date' not is Date and milliseconds and unknow mask, then undefined */
+			if (!mask) {
+				return undefined;
+			}
+
+			var regExDate = /d{1,2}/ig;
+			var regExMonth = /m{1,2}/ig;
+			var regExYear = /yy(?:yy)?/ig;
+
+			var datePattern = regExDate.exec(mask)[0];
+			var monthPattern = regExMonth.exec(mask)[0];
+			var yearPattern = regExYear.exec(mask)[0];
+
+			var dateIndex = mask.search(datePattern);
+			var monthIndex = mask.search(monthPattern);
+			var yearIndex = mask.search(yearPattern);
+
+			var strDate = date.substr(dateIndex, datePattern.length);
+			var strMonth = date.substr(monthIndex, monthPattern.length);
+			var strYear = date.substr(yearIndex, yearPattern.length);
+
+			var d = parseInt(strDate);
+			var m = parseInt(strMonth) - 1;
+			var y = parseInt(strYear);
+
+			return new Date(y, m, d);
+		},
+
+		format: function (date, fromMask, toMask) {
+
+			date = this.parse(date, fromMask);
+		
+			if (!date) {
+				return undefined;
+			}
+
+			var padLeft = function (value, maxLength) {
+				value = String(value);
+				maxLength = maxLength || 2;
+				while (value.length < maxLength) value = "0" + value;
+				return value;
+			};
+
+			var d = date.getDate(),
+				D = date.getDay(),
+				m = date.getMonth(),
+				y = date.getFullYear(),
+				H = date.getHours(),
+				M = date.getMinutes(),
+				s = date.getSeconds();
+
+			var flags = {
+				d: d,
+				dd: padLeft(d),
+				ddd: this.shortDays[D],
+				dddd: this.days[D],
+				m: m + 1,
+				mm: padLeft(m + 1),
+				mmm: this.shortMonths[m],
+				mmmm: this.months[m],
+				yy: String(y).slice(2),
+				yyyy: y,
+				h: H % 12 || 12,
+				hh: padLeft(H % 12 || 12),
+				H: H,
+				HH: padLeft(H),
+				M: M,
+				MM: padLeft(M),
+				s: s,
+				ss: padLeft(s)
+			};
+
+			toMask = String(this.masks[toMask] || toMask || this.masks["default"]);
+
+			var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|"[^"]*"|'[^']*'/g;
+
+			return toMask.replace(token, function (pattern) {
+				return pattern in flags ? flags[pattern] : pattern.slice(1, pattern.length - 1);
+			});
+		},
+
+		fromNow: function (date, mask) {
+			
+			date = this.parse(date, mask);
+ 
+			if (!date) {
+				return undefined;
+			}
+
+			var years = (Date.now() - date) / 1000 / 60 / 60 / 24 / 365;
+
+			return years < 0 ? 0 : years.toFixed(1);
+		}
+	}
+
+	/*
+		Exemple:
+			alert(DateFormatter.format("2013AAA2VVVV12", "yyyyAAAmVVVVdd", "dddd mmmm yyyy HH:MM:ss"));
+
+		Result:
+			"Tuesday February 2013 14:32:12"
+
+
+		Exemple:
+			alert(DateFormatter.format("21 May 1958 10:12", "HH:MM:ss, dddd mmmm yyyy year"));
+
+		Result:
+			"10:12:00, Wednesday May 1958 year"
+	 */
+
+	/* #endregion Date Display Formatter (2) */
 
 
 	/* #region String calculator (4) */
@@ -618,6 +761,21 @@
 		var result = (new ArrayTool).selection(arr);
 		setResult("vArraySelection", "Result: [" + result + "]");
 	}
+	document.getElementById("bDateFormatter").onclick = function () {
+		var date = getValue("tbDateFormatterDate");
+		var fromMask = getValue("tbDateFormatterFromMask");
+		var toMask = getValue("tbDateFormatterToMask");
+
+		if (!fromMask && !toMask && !DateFormatter.parse(date)) {
+			setError("vDateFormatter", "Data entry errors!");
+			return;
+		}
+
+		var formatDate = DateFormatter.format(date, fromMask, toMask) + "<br />" + 
+			"From now " + DateFormatter.fromNow(date, fromMask) + " years ago.";
+
+		setResult("vDateFormatter", formatDate);
+	}
 
 	document.getElementById("bStringCalc").onclick = function () {
 		var num1 = getValue("tbStringCalc1");
@@ -756,5 +914,7 @@
 
 		setResult("vCache", left + " " + operator + " " + right + " = " + result);
 	}
+
+
 }
 
