@@ -57,6 +57,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Graphs\data.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -67,6 +68,8 @@
   <ItemGroup>
     <Content Include="index.html" />
     <Content Include="Scripts\part1.js" />
+    <Content Include="Scripts\sigma.min.js" />
+    <Content Include="Scripts\sigma.parsers.json.min.js" />
     <Content Include="Styles\reset.css" />
     <Content Include="Styles\style.css" />
     <Content Include="Web.config" />

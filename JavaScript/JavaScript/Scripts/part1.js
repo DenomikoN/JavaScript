@@ -1,6 +1,16 @@
 ﻿window.onload = function () {
 
-	/* #region Utils functions */
+	// #region Utils functions
+
+	function setClick(id, hFunc) {
+		if (!id || !hFunc) {
+			return;
+		}
+		var control = document.getElementById(id);
+		if (control) {
+			control.onclick = hFunc;
+		}
+	}
 
 	function setResult(id, value) {
 		var viewer = document.getElementById(id);
@@ -44,6 +54,7 @@
 		}
 
 		var regExNumber = /(-)?[0-9]+(\.[0-9])?/g; /* Integer and float numbers */
+
 		var regExResult = stringArray.match(regExNumber);
 
 		if (!regExResult) {
@@ -54,18 +65,16 @@
 		regExResult.forEach(function (item) {
 			arr.push(parseFloat(item));
 		});
+
 		return arr;
 	}
 
-	/* #endregion Utils functions */
+	// #endregion Utils functions
 
-
-
-
-	/* #region Array Processing Tool (1) */
+	// #region Array Processing Tool (1)
 
 	function subSum(arr) {
-		if (!arr || arr.length === 0) {
+		if (!arr || !arr.length) {
 			return undefined;
 		}
 
@@ -85,7 +94,7 @@
 		return maxSum;
 	}
 	function min(arr) {
-		if (!arr || arr.length === 0) {
+		if (!arr || !arr.length) {
 			return undefined;
 		}
 
@@ -100,7 +109,7 @@
 		return minItem;
 	}
 	function max(arr) {
-		if (!arr || arr.length === 0) {
+		if (!arr || !arr.length) {
 			return undefined;
 		}
 
@@ -115,21 +124,19 @@
 		return maxItem;
 	}
 	function mid(arr) {
-		if (!arr || arr.length === 0) {
+		if (!arr || !arr.length) {
 			return undefined;
 		}
 
 		var sum = 0;
-		var delta = 0;
-		var midValue = 0;
-		var midItem = arr[0];
 
 		arr.forEach(function (item) {
 			sum += item;
 		});
 
-		midValue = sum / arr.length;
-		delta = Math.abs(midValue - arr[0]);
+		var midItem = arr[0];
+		var midValue = sum / arr.length;
+		var delta = Math.abs(midValue - arr[0]);
 
 		arr.forEach(function (item) {
 			var tmpDelta = Math.abs(midValue - item);
@@ -141,57 +148,8 @@
 
 		return midItem;
 	}
-	function mmm(arr) {
-		if (!arr || arr.length === 0) {
-			return undefined;
-		}
-
-		var minItem = arr[0];
-		var midItem = arr[0];
-		var maxItem = arr[0];
-
-		var sum = 0;
-		var delta = 0;
-		var midValue = 0;
-
-		/* Search min, max and sum */
-
-		arr.forEach(function (item) {
-			if (item < minItem) {
-				minItem = item;
-			}
-			else if (item > maxItem) {
-				maxItem = item;
-			}
-			sum += item;
-		});
-
-		/* Search mid */
-
-		midValue = sum / arr.length;
-		delta = Math.abs(midValue - arr[0]);
-
-		arr.forEach(function (item) {
-			var tmpDelta = Math.abs(midValue - item);
-			if (tmpDelta < delta) {
-				delta = tmpDelta;
-				midItem = item;
-			}
-		});
-
-		var result = {
-			min: minItem,
-			mid: midItem,
-			max: maxItem,
-			toString: function () {
-				return "[min: " + this.min + ", mid: " + this.mid + ", max: " + this.max + "]";
-			}
-		}
-
-		return result;
-	}
 	function selection(arr) {
-		if (!arr || arr.length === 0) {
+		if (!arr || !arr.length) {
 			return undefined;
 		}
 
@@ -213,17 +171,22 @@
 		return currentArray.length > lastArray.length ? currentArray : lastArray;
 	}
 
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is constructor
 	function ArrayTool() {
 		this.subSum = subSum;
-		this.mmm = mmm;
+		this.min = min;
+		this.mid = mid;
+		this.max = max;
 		this.selection = selection;
 	}
 
-	/* #endregion Array Processing Tool (1) */
+	// #endregion Array Processing Tool (1)
 
+	// #region Date Display Formatter (2)
 
-	/* #region Date Display Formatter (2) */
-
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is formatter object
 	var DateFormatter = {
 		days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
 		shortDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -237,7 +200,6 @@
 			fullDate: "dddd, mmmm d, yyyy",
 			isoDate: "yyyy-mm-dd"
 		},
-
 		parse: function (date, mask) {
 			/* if empty parameters, then now */
 			if (!date && !mask) {
@@ -278,13 +240,11 @@
 			var m = parseInt(strMonth) - 1;
 			var y = parseInt(strYear);
 
-			return new Date(y, m, d);
+			var result = new Date(y, m, d);
+			return result;
 		},
-
 		format: function (date, fromMask, toMask) {
-
 			date = this.parse(date, fromMask);
-		
 			if (!date) {
 				return undefined;
 			}
@@ -292,35 +252,37 @@
 			var padLeft = function (value, maxLength) {
 				value = String(value);
 				maxLength = maxLength || 2;
-				while (value.length < maxLength) value = "0" + value;
+				while (value.length < maxLength) {
+					value = "0" + value;
+				}
 				return value;
 			};
 
 			var d = date.getDate(),
-				D = date.getDay(),
+				w = date.getDay(),
 				m = date.getMonth(),
 				y = date.getFullYear(),
-				H = date.getHours(),
-				M = date.getMinutes(),
+				h = date.getHours(),
+				mn = date.getMinutes(),
 				s = date.getSeconds();
 
 			var flags = {
 				d: d,
 				dd: padLeft(d),
-				ddd: this.shortDays[D],
-				dddd: this.days[D],
+				ddd: this.shortDays[w],
+				dddd: this.days[w],
 				m: m + 1,
 				mm: padLeft(m + 1),
 				mmm: this.shortMonths[m],
 				mmmm: this.months[m],
 				yy: String(y).slice(2),
 				yyyy: y,
-				h: H % 12 || 12,
-				hh: padLeft(H % 12 || 12),
-				H: H,
-				HH: padLeft(H),
-				M: M,
-				MM: padLeft(M),
+				h: h % 12 || 12,
+				hh: padLeft(h % 12 || 12),
+				H: h,
+				HH: padLeft(h),
+				M: mn,
+				MM: padLeft(mn),
 				s: s,
 				ss: padLeft(s)
 			};
@@ -330,50 +292,124 @@
 			var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|"[^"]*"|'[^']*'/g;
 
 			return toMask.replace(token, function (pattern) {
-				return pattern in flags ? flags[pattern] : pattern.slice(1, pattern.length - 1);
+				var result = pattern in flags
+					? flags[pattern]
+					: pattern.slice(1, pattern.length - 1);
+				return result;
 			});
 		},
 
 		fromNow: function (date, mask) {
-			
 			date = this.parse(date, mask);
- 
 			if (!date) {
 				return undefined;
 			}
 
 			var years = (Date.now() - date) / 1000 / 60 / 60 / 24 / 365;
 
-			return years < 0 ? 0 : years.toFixed(1);
+			var result = years < 0
+				? 0
+				: years.toFixed(1);
+
+			return result;
 		}
 	}
 
 	/*
-		Exemple:
+		Exemple1:
 			alert(DateFormatter.format("2013AAA2VVVV12", "yyyyAAAmVVVVdd", "dddd mmmm yyyy HH:MM:ss"));
 
-		Result:
+		Result1:
 			"Tuesday February 2013 14:32:12"
 
-
-		Exemple:
+		Exemple2:
 			alert(DateFormatter.format("21 May 1958 10:12", "HH:MM:ss, dddd mmmm yyyy year"));
 
-		Result:
+		Result2:
 			"10:12:00, Wednesday May 1958 year"
 	 */
 
-	/* #endregion Date Display Formatter (2) */
+	// #endregion Date Display Formatter (2)
 
+	// #region Text Formatter (3)
 
-	/* #region String calculator (4) */
+	// ReSharper disable once InconsistentNaming
+	var TextFormatter = {
+		FormatTypes: {
+			CHARACTER: "character",
+			WORD: "word",
+			SENTENCE: "sentence",
+			NONE: "none"
+		},
+		format: function (text, maxLineLength, formatType, maxLinesCount) {
+			if (!text) {
+				return undefined;
+			}
+
+			if (!maxLineLength && !maxLinesCount) {
+				return text;
+			}
+
+			if (maxLineLength && (!formatType || formatType === this.FormatTypes.NONE)) {
+				var length = Math.min(text.length, maxLineLength);
+				var result = text.substr(0, length);
+				return result;
+			}
+
+			maxLinesCount = maxLinesCount
+				? maxLinesCount
+				: -1;
+
+			var resultText = String("");
+
+			switch (formatType) {
+
+				case this.FormatTypes.CHARACTER: {
+					for (var i = 0; i < text.length && maxLinesCount; i += maxLineLength, maxLinesCount--) {
+						resultText += text.substr(i, maxLineLength) + "\n";
+					}
+					break;
+				}
+
+				case this.FormatTypes.WORD: {
+					for (var last = 0, end = maxLineLength; end < (text.length + maxLineLength) && maxLinesCount; end += maxLineLength, maxLinesCount--) {
+
+						while (text[end] !== " " && text[end] !== "-" && end !== text.length) {
+							end--;
+						}
+
+						var line = text.slice(last, ++end);
+
+						last += line.length;
+						resultText += line + "\n";
+					}
+					break;
+				}
+
+				case this.FormatTypes.SENTENCE: {
+					resultText = text
+						.replace(/[.]+[ ]*/g, ".\n")
+						.replace(/[!]+[ ]*/g, "!\n")
+						.replace(/[?]+[ ]*/g, "?\n");
+					break;
+				}
+			}
+
+			return resultText;
+		}
+
+	}
+
+	// #endregion Text Formatter (3)
+
+	// #region String calculator (4)
 
 	var stringCalculator = {
 		parse: function (strNumber) {
 			if (!strNumber) {
 				return undefined;
 			}
-			if ((typeof strNumber) == "number") {
+			if ((typeof strNumber) === "number") {
 				return strNumber;
 			}
 
@@ -393,12 +429,16 @@
 			if (!args) {
 				return false;
 			}
+
+			var isVal = true;
+
 			args.forEach(function (item) {
 				if (!stringCalculator.parse(item)) {
-					return false;
+					isVal = false;
 				}
 			});
-			return true;
+
+			return isVal;
 		},
 		add: function (num1, num2) {
 			if (!this.isValid([num1, num2])) {
@@ -408,7 +448,8 @@
 			var a = this.parse(num1);
 			var b = this.parse(num2);
 
-			return a + b;
+			var result = a + b;
+			return result;
 		},
 		sub: function (num1, num2) {
 			if (!this.isValid([num1, num2])) {
@@ -418,7 +459,8 @@
 			var a = this.parse(num1);
 			var b = this.parse(num2);
 
-			return a - b;
+			var result = a - b;
+			return result;
 		},
 		mul: function (num1, num2) {
 			if (!this.isValid([num1, num2])) {
@@ -428,7 +470,8 @@
 			var a = this.parse(num1);
 			var b = this.parse(num2);
 
-			return a * b;
+			var result = a * b;
+			return result;
 		},
 		div: function (num1, num2) {
 			if (!this.isValid([num1, num2])) {
@@ -438,14 +481,17 @@
 			var a = this.parse(num1);
 			var b = this.parse(num2);
 
-			return b ? a / b : Infinity;
+			var result = b ?
+				a / b
+				: Infinity;
+
+			return result;
 		}
 	};
 
-	/* #endregion String calculator (4) */
+	// #endregion String calculator (4)
 
-
-	/* #region Array Sorter (5) */
+	// #region Array Sorter (5) 
 
 	function shellSort(arr) {
 		if (!arr || arr.length < 2) {
@@ -464,8 +510,11 @@
 				}
 				arr[currentIndex] = currentItem;
 			}
-			floor = (floor == 2) ? 1 : Math.floor(floor * 5 / 11);
+			floor = (floor === 2)
+				? 1
+				: Math.floor(floor * 5 / 11);
 		}
+
 		return arr;
 	}
 	function selectionSort(arr) {
@@ -488,8 +537,8 @@
 		return arr;
 	}
 	function quickSort(arr) {
-		if (!arr || arr.length == 0) {
-			return [];
+		if (!arr || arr.length < 2) {
+			return arr;
 		}
 
 		var low = [];
@@ -504,7 +553,8 @@
 			}
 		}
 
-		return quickSort(low).concat(currentItem, quickSort(high));
+		var result = quickSort(low).concat(currentItem, quickSort(high));
+		return result;
 	}
 	function bubbleSort(arr) {
 		if (!arr || arr.length < 2) {
@@ -527,9 +577,13 @@
 		if (!arr || arr.length < 2) {
 			return arr;
 		}
-		return arr.sort(function (first, second) {
-			return first - second;
+
+		var sortArray = arr.sort(function (first, second) {
+			var result = first - second;
+			return result;
 		});
+
+		return sortArray;
 	}
 	function growingSort(arr) {
 		if (!arr || arr.length < 2) {
@@ -540,11 +594,10 @@
 
 		arr.forEach(function (item) {
 			for (var i = 0; i <= sortArray.length; i++) {
-				if (i == sortArray.length) {
+				if (i === sortArray.length) {
 					sortArray.push(item);
 					break;
-				}
-				else if (sortArray[i] > item) {
+				} else if (sortArray[i] > item) {
 					sortArray.splice(i, 0, item);
 					break;
 				}
@@ -554,6 +607,8 @@
 		return sortArray;
 	}
 
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is constructor
 	function Sorter() {
 		this.shellSort = shellSort;
 		this.selectionSort = selectionSort;
@@ -563,14 +618,13 @@
 		this.growingSort = growingSort;
 	}
 
-	/* #endregion Array Sorter (5) */
+	// #endregion Array Sorter (5)
 
-
-	/* #region Binary Converter (6) */
+	// #region Binary Converter (6)
 
 	function decToBin(value) {
 		if (!value) {
-			return [0];
+			return undefined;
 		}
 
 		var binArray = [];
@@ -582,7 +636,7 @@
 			}
 			binArray.unshift(0); // for +
 		} else {
-			while (value != -1) {
+			while (value !== -1) {
 				binArray.unshift(Math.abs(value % 2));
 				value >>= 1;
 			}
@@ -607,119 +661,123 @@
 		return dec;
 	}
 
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is constructor
 	function Converter() {
 		this.decToBin = decToBin;
 		this.binToDec = binToDec;
 	}
 
-	/* #endregion Binary Converter (6) */
+	// #endregion Binary Converter (6)
 
+	// #region Caching calculator (9)
 
-
-	/* #region Caching calculator (9) */
-
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is constructor
 	function CacheCalculator() {
-		this.CACHE = new Object();
+		this.cache = new Object();
 		this.clear = function () {
-			this.CACHE = new Object();
+			this.cache = new Object();
 		}
 		this.add = function (a, b) {
 			var key = a + "+" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key] + " (cache)";
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a + b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.sub = function (a, b) {
 			var key = a + "-" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a - b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.mul = function (a, b) {
 			var key = a + "*" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a * b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.div = function (a, b) {
 			var key = a + "/" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
-				var result = b == 0 ? Infinity : a / b;
-				this.CACHE[key] = result;
+				var result = !b
+					? Infinity
+					: a / b;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.mod = function (a, b) {
 			var key = a + "%" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a % b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.pow = function (a, b) {
 			var key = a + "pow" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = Math.pow(a, b);
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.and = function (a, b) {
 			var key = a + "&" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a & b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.or = function (a, b) {
 			var key = a + "|" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a | b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.shr = function (a, b) {
 			var key = a + ">>" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a >> b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
 		this.shl = function (a, b) {
 			var key = a + "<<" + b;
-			if (this.CACHE[key]) {
-				return this.CACHE[key];
+			if (this.cache[key]) {
+				return this.cache[key];
 			} else {
 				var result = a << b;
-				this.CACHE[key] = result;
+				this.cache[key] = result;
 				return result;
 			}
 		}
@@ -727,11 +785,11 @@
 
 	var calculator = new CacheCalculator();
 
-	/* #endregion Caching calculator (9) */
+	// #endregion Caching calculator (9)
 
+	// #region Events initialize
 
-
-	document.getElementById("bArraySubSum").onclick = function () {
+	setClick("bArraySubSum", function () {
 		var value = getValue("tbArraySubSum");
 		var arr = parseArray(value);
 		if (!arr) {
@@ -740,18 +798,26 @@
 		}
 		var result = (new ArrayTool).subSum(arr);
 		setResult("vArraySubSum", "Sub sum: " + result);
-	}
-	document.getElementById("bArrayMmm").onclick = function () {
-		var value = getValue("tbArrayMmm");
+	});
+	setClick("bArrayMinMidMax", function () {
+		var value = getValue("tbArrayMinMidMax");
 		var arr = parseArray(value);
 		if (!arr) {
-			setError("vArrayMmm", "Data entry errors!");
+			setError("vArrayMinMidMax", "Data entry errors!");
 			return;
 		}
-		var result = (new ArrayTool).mmm(arr);
-		setResult("vArrayMmm", "Result: " + result);
-	}
-	document.getElementById("bArraySelection").onclick = function () {
+
+		var arrayTool = new ArrayTool();
+
+		var minValue = arrayTool.min(arr);
+		var midValue = arrayTool.mid(arr);
+		var maxValue = arrayTool.max(arr);
+
+		var result = "[min: " + minValue + ", mid: " + midValue + ", max: " + maxValue + "]";
+
+		setResult("vArrayMinMidMax", "Result: " + result);
+	});
+	setClick("bArraySelection", function () {
 		var value = getValue("tbArraySelection");
 		var arr = parseArray(value);
 		if (!arr) {
@@ -760,8 +826,8 @@
 		}
 		var result = (new ArrayTool).selection(arr);
 		setResult("vArraySelection", "Result: [" + result + "]");
-	}
-	document.getElementById("bDateFormatter").onclick = function () {
+	});
+	setClick("bDateFormatter", function () {
 		var date = getValue("tbDateFormatterDate");
 		var fromMask = getValue("tbDateFormatterFromMask");
 		var toMask = getValue("tbDateFormatterToMask");
@@ -771,13 +837,27 @@
 			return;
 		}
 
-		var formatDate = DateFormatter.format(date, fromMask, toMask) + "<br />" + 
+		var formatDate = DateFormatter.format(date, fromMask, toMask) + "<br />" +
 			"From now " + DateFormatter.fromNow(date, fromMask) + " years ago.";
 
 		setResult("vDateFormatter", formatDate);
-	}
+	});
+	setClick("bTextFormatter", function () {
+		var text = getValue("tbTextFormatterText");
+		if (!text) {
+			setError("vTextFormatter", "Data entry errors! Enter text!");
+			return;
+		}
 
-	document.getElementById("bStringCalc").onclick = function () {
+		var maxLineLength = parseInt(getValue("tbTextFormatterLength"));
+		var maxLineCount = parseInt(getValue("tbTextFormatterCount"));
+		var format = getValue("cbTextFormatterOptions");
+
+		var resultText = TextFormatter.format(text, maxLineLength, format, maxLineCount);
+
+		setResult("vTextFormatter", resultText);
+	});
+	setClick("bStringCalc", function () {
 		var num1 = getValue("tbStringCalc1");
 		var num2 = getValue("tbStringCalc2");
 		var operator = getValue("cbStringCalcOperators");
@@ -807,8 +887,8 @@
 		}
 
 		setResult("vStringCalc", num1 + " " + operator + " " + num2 + " = " + result);
-	}
-	document.getElementById("bArraySort").onclick = function () {
+	});
+	setClick("bArraySort", function () {
 		var value = getValue("tbArraySort");
 		var arr = parseArray(value);
 		if (!arr) {
@@ -827,8 +907,8 @@
 			"Growing sort: [" + sorter.growingSort(arr) + "]<br />";
 
 		setResult("vArraySort", result);
-	}
-	document.getElementById("bBinaryConverter").onclick = function () {
+	});
+	setClick("bBinaryConverter", function () {
 		var value = getValue("tbBinaryConverter");
 		var converter = new Converter();
 
@@ -849,9 +929,8 @@
 			var bin = value.split("");
 			setResult("vBinaryConverter", "Result: " + converter.binToDec(bin));
 		}
-	}
-
-	document.getElementById("bCache").onclick = function () {
+	});
+	setClick("bCache", function () {
 		var left = getValue("tbCacheLeft");
 		var right = getValue("tbCacheRight");
 
@@ -913,8 +992,8 @@
 		}
 
 		setResult("vCache", left + " " + operator + " " + right + " = " + result);
-	}
+	});
 
-
+	// #endregion Events initialize
 }
 
