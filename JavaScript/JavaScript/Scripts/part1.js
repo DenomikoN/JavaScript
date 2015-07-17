@@ -168,7 +168,11 @@
 			}
 		});
 
-		return currentArray.length > lastArray.length ? currentArray : lastArray;
+		var result = currentArray.length > lastArray.length
+			? currentArray
+			: lastArray;
+
+		return result;
 	}
 
 	// ReSharper disable once InconsistentNaming
@@ -292,9 +296,11 @@
 			var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|"[^"]*"|'[^']*'/g;
 
 			return toMask.replace(token, function (pattern) {
+
 				var result = pattern in flags
 					? flags[pattern]
 					: pattern.slice(1, pattern.length - 1);
+
 				return result;
 			});
 		},
@@ -397,7 +403,6 @@
 
 			return resultText;
 		}
-
 	}
 
 	// #endregion Text Formatter (3)
@@ -670,6 +675,504 @@
 
 	// #endregion Binary Converter (6)
 
+	// #region Depth-first search (7)
+
+	// Tree
+	// ReSharper disable once InconsistentNaming
+	// TODO: Do not delete, this is constructor
+	var Tree = function (level) {
+		if (!level) {
+			return null;
+		}
+		this.level = level;
+		this.nodeCount = Math.pow(2, level) - 1;
+		this.nodes = new Array(this.nodeCount);
+		this.toString = function () {
+			var result = "";
+			for (var l = 0; l < this.nodeCount; l++) {
+				result += "[" + this.nodes[l] + "]\n";
+			}
+			return result;
+		}
+
+		for (var k = 0; k < this.nodeCount; k++) {
+			this.nodes[k] = new Array(this.nodeCount);
+			for (var j = 0; j < this.nodeCount; j++) {
+				this.nodes[k][j] = 0;
+			}
+		}
+
+		for (var i = 0; i < (this.nodeCount / 2) - 1; i++) {
+			var position = (i * 2) + 1;
+			this.nodes[i][position] = 1;
+			this.nodes[i][position + 1] = 1;
+			this.nodes[position][i] = 1;
+			this.nodes[position + 1][i] = 1;
+		}
+
+		return this;
+	};
+
+	// DFS
+	function dfs(tree, source) {
+		if (!tree) {
+			return [];
+		}
+
+		var visited = new Array(tree.nodeCount);
+		var visitOrder = new Array(tree.nodeCount);
+		var counter = 0;
+
+		(function recurs(st) {
+			visitOrder[counter++] = st;
+			visited[st] = 1;
+			var i;
+			for (i = 0; i <= tree.nodeCount; i++) {
+				if (tree.nodes[st][i] && (!visited[i]))
+					recurs(i);
+			}
+		})(source);
+
+		return visitOrder;
+	}
+
+	// Tree view
+	var treeViewport = null;
+	var treeRenderer = function (canvas) {
+		canvas = $(canvas).get(0);
+		var ctx = canvas.getContext("2d");
+		var particleSystem;
+
+		var that = {
+			init: function (system) {
+				particleSystem = system;
+				particleSystem.screenSize(canvas.width, canvas.height);
+				particleSystem.screenPadding(80);
+				that.initMouseHandling();
+			},
+
+			redraw: function () {
+				ctx.fillStyle = "white";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+				particleSystem.eachEdge(function (edge, pt1, pt2) {
+					ctx.strokeStyle = "rgba(0,0,0, .333)";
+					ctx.lineWidth = 1;
+					ctx.beginPath();
+					ctx.fillStyle = "black";
+					ctx.moveTo(pt1.x, pt1.y);
+					ctx.lineTo(pt2.x, pt2.y);
+					ctx.stroke();
+				});
+
+				particleSystem.eachNode(function (node, pt) {
+					var w = 10;
+					ctx.fillStyle = (node.data.alone)
+                        ? "orange"
+                        : "gray";
+
+					ctx.fillRect(pt.x - w / 2, pt.y - w / 2, w, w);
+
+					ctx.fillStyle = "black";
+					ctx.font = 'italic 16px sans-serif';
+
+					var text = node.name + " (visit №" + node.visit + ")";
+					ctx.fillText(text, pt.x + 8, pt.y + 8);
+				});
+			},
+
+			initMouseHandling: function () {
+
+				var dragged = null;
+
+				var handler = {
+					clicked: function (e) {
+						var pos = $(canvas).offset();
+						// ReSharper disable once InconsistentNaming
+						var _mouseP = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
+						dragged = particleSystem.nearest(_mouseP);
+
+						if (dragged && dragged.node) {
+							dragged.node.fixed = true;
+						}
+
+						$(canvas).bind('mousemove', handler.dragged);
+						$(window).bind('mouseup', handler.dropped);
+
+						return false;
+					},
+					dragged: function (e) {
+						var pos = $(canvas).offset();
+						var s = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
+
+						if (dragged && dragged.node) {
+							var p = particleSystem.fromScreen(s);
+							dragged.node.p = p;
+						}
+
+						return false;
+					},
+					dropped: function () {
+						if (!dragged || !dragged.node) {
+							return undefined;
+						}
+						if (dragged.node) {
+							dragged.node.fixed = false;
+						}
+						dragged.node.tempMass = 1000;
+						dragged = null;
+						$(canvas).unbind('mousemove', handler.dragged);
+						$(window).unbind('mouseup', handler.dropped);
+						// ReSharper disable once AssignToImplicitGlobalInFunctionScope
+						_mouseP = null;
+						return false;
+					}
+				}
+
+				$(canvas).mousedown(handler.clicked);
+			}
+		}
+
+		return that;
+	}
+	function showTree(viewer, tree, visitedOrder, source) {
+		if (!viewer || !tree) {
+			return;
+		}
+
+		var count = tree.nodeCount;
+		var i;
+
+		for (i = 0; i < count; i++) {
+			if (source === (i + 1)) {
+				viewer.addNode(i + 1, { alone: true });
+			} else {
+				viewer.addNode(i + 1);
+			}
+		}
+
+		for (i = 0; i < count; i++) {
+			for (var j = i; j < count; j++) {
+				if (tree.nodes[i][j]) {
+					viewer.addEdge(i + 1, j + 1);
+				}
+			}
+		}
+		if (visitedOrder) {
+			for (i = 0; i < count; i++) {
+				var node = viewer.getNode(visitedOrder[i] + 1);
+				if (node) {
+					node.visit = i;
+				}
+			}
+		}
+	}
+
+	// #endregion Depth-first search (7)
+
+	// #region Dijkstra’s algorithm (8)
+
+	// Viewer
+	var graphViewport = null;
+	var graphRenderer = function (canvas) {
+		canvas = $(canvas).get(0);
+		var ctx = canvas.getContext("2d");
+		var particleSystem;
+
+		var that = {
+			init: function (system) {
+				particleSystem = system;
+				particleSystem.screenSize(canvas.width, canvas.height);
+				particleSystem.screenPadding(80);
+				that.initMouseHandling();
+			},
+
+			redraw: function () {
+				ctx.fillStyle = "white";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+				particleSystem.eachEdge(function (edge, pt1, pt2) {
+					ctx.strokeStyle = "rgba(0,0,0, .333)";
+					ctx.lineWidth = 1;
+					ctx.beginPath();
+					ctx.fillStyle = "black";
+
+					var x = Math.abs((pt1.x - pt2.x) / 2) + Math.min(pt1.x, pt2.x);
+					var y = Math.abs((pt1.y - pt2.y) / 2) + Math.min(pt1.y, pt2.y);
+
+					ctx.font = 'italic 16px sans-serif';
+					ctx.fillText(edge.weight, x, y);
+
+					ctx.moveTo(pt1.x, pt1.y);
+					ctx.lineTo(pt2.x, pt2.y);
+					ctx.stroke();
+				});
+
+				particleSystem.eachNode(function (node, pt) {
+					var w = 10;
+					ctx.fillStyle = (node.data.alone)
+                        ? "orange"
+                        : "gray";
+
+					ctx.fillRect(pt.x - w / 2, pt.y - w / 2, w, w);
+
+					ctx.fillStyle = "black";
+					ctx.font = 'italic 16px sans-serif';
+
+					var text = node.name + " (dist: " + node.dist + ")";
+					ctx.fillText(text, pt.x + 8, pt.y + 8);
+				});
+			},
+
+			initMouseHandling: function () {
+
+				var dragged = null;
+
+				var handler = {
+					clicked: function (e) {
+						var pos = $(canvas).offset();
+						// ReSharper disable once InconsistentNaming
+						var _mouseP = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
+						dragged = particleSystem.nearest(_mouseP);
+
+						if (dragged && dragged.node) {
+							dragged.node.fixed = true;
+						}
+
+						$(canvas).bind('mousemove', handler.dragged);
+						$(window).bind('mouseup', handler.dropped);
+
+						return false;
+					},
+					dragged: function (e) {
+						var pos = $(canvas).offset();
+						var s = arbor.Point(e.pageX - pos.left, e.pageY - pos.top);
+
+						if (dragged && dragged.node) {
+							var p = particleSystem.fromScreen(s);
+							dragged.node.p = p;
+						}
+
+						return false;
+					},
+					dropped: function () {
+						if (!dragged || !dragged.node) {
+							return undefined;
+						}
+						if (dragged.node !== null) {
+							dragged.node.fixed = false;
+						}
+						dragged.node.tempMass = 1000;
+						dragged = null;
+						$(canvas).unbind('mousemove', handler.dragged);
+						$(window).unbind('mouseup', handler.dropped);
+						// ReSharper disable once AssignToImplicitGlobalInFunctionScope
+						_mouseP = null;
+						return false;
+					}
+				}
+
+				$(canvas).mousedown(handler.clicked);
+			}
+		}
+
+		return that;
+	}
+	function showGraph(viewer, graph, startNode) {
+		if (!viewer || !graph) {
+			return;
+		}
+		graph.nodes.forEach(function (item) {
+			var newNode;
+			if (startNode === item.id) {
+				newNode = viewer.addNode(item.id, { alone: true });
+			} else {
+				newNode = viewer.addNode(item.id);
+			}
+			if (newNode) {
+				newNode.dist = item.dist;
+			}
+		});
+		graph.edges.forEach(function (item) {
+			var newEdge = viewer.addEdge(item.source, item.target);
+			if (newEdge) {
+				newEdge.weight = item.weight;
+			}
+		});
+	}
+
+
+	// Model
+	var utilGraph = {
+		createNode: function (id) {
+			return {
+				id: id,
+				dist: 0,
+				toString: function () {
+					return "[id: " + this.id + ", dist: " + this.dist + "]";
+				}
+			}
+		},
+		createEdge: function (source, target, weight) {
+			return {
+				source: source,
+				target: target,
+				weight: weight,
+				toString: function () {
+					return "[source: " + this.source + ", target: " + this.target + ", weight: " + this.weight + "]";
+				}
+			}
+		},
+		generateGraph: function (nodeCount, percent) {
+			if (!nodeCount || nodeCount < 0) {
+				return undefined;
+			}
+
+			var graph = {
+				nodes: [],
+				edges: [],
+				toString: function () {
+					var strNodes = "[Nodes: " + this.nodes.length + "[" + this.nodes + "]]";
+					var strEdges = "[Edges: " + this.edges.length + "[" + this.edges + "]]";
+					return strNodes + "\n" + strEdges;
+				}
+			};
+
+			for (var i = 1; i <= nodeCount; i++) {
+				var n = this.createNode(i);
+				graph.nodes.push(n);
+			}
+
+			if (!percent) {
+				return graph;
+			} else if (percent > 100) {
+				percent = 100;
+			}
+
+			var edgeCount = ((nodeCount * (nodeCount - 1) / 2) / 100) * percent;
+			var iEdge = 1;
+
+			while (iEdge <= edgeCount) {
+
+				var v1 = Math.floor(Math.random() * nodeCount + 1);
+				var v2 = Math.floor(Math.random() * nodeCount + 1);
+
+				if (v1 === v2) {
+					continue;
+				}
+
+				var flag = true;
+
+				for (var j = 0; j < graph.edges.length; j++) {
+					var e = graph.edges[j];
+					if ((v1 === e.source && v2 === e.target) || (v1 === e.target && v2 === e.source)) {
+						flag = false;
+						break;
+					}
+				}
+
+				if (flag) {
+					var weight = Math.floor(Math.random() * (nodeCount + 1));
+					var newEdge = this.createEdge(v1, v2, weight);
+					graph.edges.push(newEdge);
+					iEdge++;
+				}
+			}
+			return graph;
+		}
+	}
+
+	// Algorithm
+	function dijkstra(graph, idSource) {
+		if (!graph || isNaN(idSource)) {
+			return;
+		}
+
+		var notVisited = [];
+		var source;
+
+		graph.nodes.forEach(function (item) {
+			item.dist = Infinity;
+			notVisited.push(item);
+			if (item.id === idSource) {
+				source = item;
+				source.dist = 0;
+			}
+		});
+
+		var current = source;
+
+		while (notVisited.length && current) {
+
+			// search neighbors
+			var neighbor = [];
+			for (var i = 0; i < graph.edges.length; i++) {
+				var e = graph.edges[i];
+				// ReSharper disable once QualifiedExpressionMaybeNull
+				if (e.source === current.id) {
+					neighbor.push({
+						node: e.target,
+						edge: e
+					});
+				} else if (e.target === current.id) {
+					neighbor.push({
+						node: e.source,
+						edge: e
+					});
+				}
+			}
+
+			// set neighbor weight
+			neighbor.forEach(function (item) {
+				var iNode = graph.nodes[item.node - 1];
+				var iEdge = item.edge;
+				// ReSharper disable once ClosureOnModifiedVariable
+				var weight = current.dist + iEdge.weight;
+				if (iNode.dist === Infinity || iNode.dist > weight) {
+					iNode.dist = weight;
+				}
+			});
+
+			// visited remove
+			for (var j = 0; j < notVisited.length; j++) {
+				// ReSharper disable once QualifiedExpressionMaybeNull
+				if (current.id === notVisited[j].id) {
+					notVisited.splice(j, 1);
+				}
+			}
+
+			// search next not visited node of neighbors
+			current = null;
+			for (var l = 0; l < neighbor.length; l++) {
+				var nIndex = neighbor[l].node - 1;
+				var iNode = graph.nodes[nIndex];
+				for (var k = 0; k < notVisited.length; k++) {
+					var iNotVisited = notVisited[k];
+					if (iNotVisited.id === iNode.id) {
+						current = iNode;
+						break;
+					}
+				}
+				if (current) {
+					break;
+				}
+			}
+
+			// if not visited node no exists in neighbors
+			if (!current && notVisited.length) {
+				for (var t = 0; t < notVisited.length; t++) {
+					if (notVisited[t].dist !== Infinity) {
+						current = notVisited[t];
+						break;
+					}
+				}
+			}
+		}
+
+	}
+
+	// #endregion Dijkstra’s algorithm (8)
+
 	// #region Caching calculator (9)
 
 	// ReSharper disable once InconsistentNaming
@@ -715,8 +1218,8 @@
 				return this.cache[key];
 			} else {
 				var result = !b
-					? Infinity
-					: a / b;
+                    ? Infinity
+                    : a / b;
 				this.cache[key] = result;
 				return result;
 			}
@@ -838,7 +1341,7 @@
 		}
 
 		var formatDate = DateFormatter.format(date, fromMask, toMask) + "<br />" +
-			"From now " + DateFormatter.fromNow(date, fromMask) + " years ago.";
+            "From now " + DateFormatter.fromNow(date, fromMask) + " years ago.";
 
 		setResult("vDateFormatter", formatDate);
 	});
@@ -899,12 +1402,12 @@
 		var sorter = new Sorter();
 
 		var result =
-			"Shell sort: [" + sorter.shellSort(arr) + "]<br />" +
-			"Selection sort: [" + sorter.selectionSort(arr) + "]<br />" +
-			"Quicksort: [" + sorter.quickSort(arr) + "]<br />" +
-			"Bubble sort: [" + sorter.bubbleSort(arr) + "]<br />" +
-			"Included sort: [" + sorter.includedSort(arr) + "]<br />" +
-			"Growing sort: [" + sorter.growingSort(arr) + "]<br />";
+            "Shell sort: [" + sorter.shellSort(arr) + "]<br />" +
+            "Selection sort: [" + sorter.selectionSort(arr) + "]<br />" +
+            "Quicksort: [" + sorter.quickSort(arr) + "]<br />" +
+            "Bubble sort: [" + sorter.bubbleSort(arr) + "]<br />" +
+            "Included sort: [" + sorter.includedSort(arr) + "]<br />" +
+            "Growing sort: [" + sorter.growingSort(arr) + "]<br />";
 
 		setResult("vArraySort", result);
 	});
@@ -929,6 +1432,74 @@
 			var bin = value.split("");
 			setResult("vBinaryConverter", "Result: " + converter.binToDec(bin));
 		}
+	});
+	setClick("bDFSTree", function () {
+		var levels = getValue("tbDFSTreeLevels");
+		var source = getValue("tbDFSTreeSource");
+
+		levels = parseInt(levels);
+		source = parseInt(source);
+
+		if (!levels || !source) {
+			setError("vDFSTree", "Data entry errors!");
+			return;
+		}
+
+		// generate tree
+		var tree = new Tree(levels);
+
+		// calculate distance
+		var visited = dfs(tree, source - 1);
+
+		// show tree
+		if (!treeViewport) {
+			// initialize
+			treeViewport = arbor.ParticleSystem(1000, 600, 0.5);
+			treeViewport.parameters({ gravity: true });
+			treeViewport.renderer = treeRenderer("#viewportDFSTree");
+		} else {
+			// clear
+			treeViewport.prune();
+		}
+
+		showTree(treeViewport, tree, visited);
+
+		setResult("vDFSTree", visited);
+	});
+	setClick("bDijkstra", function () {
+		var nodeCount = getValue("tbDijkstraNodes");
+		var percent = getValue("tbDijkstraPercent");
+		var source = getValue("tbDijkstraSource");
+
+		nodeCount = parseInt(nodeCount);
+		percent = parseFloat(percent);
+		source = parseInt(source);
+
+		if (!nodeCount || nodeCount < 1 || (!percent && percent !== 0) || !source || source < 1 || nodeCount < source) {
+			setError("vDijkstra", "Data entry errors!");
+			return;
+		}
+
+		// generate graph
+		var graph = utilGraph.generateGraph(nodeCount, percent);
+
+		// calculate distance
+		dijkstra(graph, source);
+
+		// show graph
+		if (!graphViewport) {
+			// initialize
+			graphViewport = arbor.ParticleSystem(1000, 600, 0.5);
+			graphViewport.parameters({ gravity: true });
+			graphViewport.renderer = graphRenderer("#viewport");
+		} else {
+			// clear
+			graphViewport.prune();
+		}
+		showGraph(graphViewport, graph, source);
+
+		// show result message
+		setResult("vDijkstra", "Yes");
 	});
 	setClick("bCache", function () {
 		var left = getValue("tbCacheLeft");
@@ -996,4 +1567,3 @@
 
 	// #endregion Events initialize
 }
-
